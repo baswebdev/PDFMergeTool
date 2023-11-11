@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Merge Tool</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Header -->
+
+    <div class="header">
+        <h1> <span>PDF</span> Merge Tool</h1>
+    </div>
+
+    <!-- Main -->
+
+    <div class="container">
+        <div class="text-center mt-5">
+            <h1 class="mb-4">Willkommen!</h1>
+            <p>Wähle mindestens zwei PDF-Dateien aus, um sie zu kombinieren:</p>
+            <input type="file" id="fileInput" class="form-control" multiple>
+            <button id="mergeButton" class="btn btn-primary" onclick="mergePDFs()">PDF zusammenführen</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+
+    <div class="footer">
+        <p>© 2023 by basWebDev</p>
+    </div>
+
+    <!-- Bootstrap JS und Popper.js -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.10.0/dist/pdf-lib.js"></script>
+    <script>
+        async function mergePDFs() {
+            const fileInput = document.getElementById('fileInput');
+            const files = fileInput.files;
+
+            if (files.length < 2) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Bitte wähle mindestens 2 PDFs um auszuführen.'
+                });
+                return;
+            }
+
+            const pdfDoc = await PDFLib.PDFDocument.create();
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const fileArrayBuffer = await file.arrayBuffer();
+                const externalPdfDoc = await PDFLib.PDFDocument.load(fileArrayBuffer);
+                const copiedPages = await pdfDoc.copyPages(externalPdfDoc, externalPdfDoc.getPageIndices());
+                copiedPages.forEach((page) => pdfDoc.addPage(page));
+            }
+
+            const mergedPdfBytes = await pdfDoc.save();
+
+            const blob = new Blob([mergedPdfBytes], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'neuePDF.pdf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Erfolgreich!',
+                text: 'PDFs wurden zusammengeführt.'
+            });
+        }
+    </script>
+
+</body>
+
+</html>
